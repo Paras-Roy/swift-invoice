@@ -40,7 +40,7 @@ const Signup = () => {
             <Image source={require('../assets/bg.jpg')} style={styles.backgroundImage} />
 
             <View style={styles.card}>
-                <Text style={styles.title}>Signup / Login</Text>
+                <Text style={styles.title}>Swift Invoice</Text>
                 <TextInput
                     placeholder="Email"
                     value={email}
@@ -86,7 +86,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     title: {
-        fontSize: 24,
+        fontSize: 60,
         fontWeight: 'bold',
         marginBottom: 20,
     },

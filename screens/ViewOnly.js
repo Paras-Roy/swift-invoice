@@ -2,115 +2,110 @@ import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, Button, FlatList } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
-
-import { printToFileAsync } from 'expo-print';
-import { shareAsync } from 'expo-sharing';
-
+import sharePDF from '../utils/Share';
 
 export default function ViewOnly({ route }) {
   const { fileData } = route.params;
   const name = fileData.fileName;
+  //   const file = await printToFileAsync({ html:html, base64: false });
+  //   await shareAsync(file.uri);
+  // }
 
-  let generatePDF = async () => {
-    const file = await printToFileAsync({ html:html, base64: false });
-    await shareAsync(file.uri);
-  }
+  // const html = `
+  // html>
+  //   <head>
+  //     <style>
+  //       body {
+  //         font-family: Arial, Helvetica, sans-serif;
+  //       }
 
-  const html = `
-  html>
-    <head>
-      <style>
-        body {
-          font-family: Arial, Helvetica, sans-serif;
-        }
+  //       .container {
+  //         padding: 20px;
+  //       }
 
-        .container {
-          padding: 20px;
-        }
+  //       .header {
+  //         display: flex;
+  //         align-items: center;
+  //         margin-bottom: 20px;
+  //       }
 
-        .header {
-          display: flex;
-          align-items: center;
-          margin-bottom: 20px;
-        }
+  //       .header h1 {
+  //         font-size: 36px;
+  //         font-weight: bold;
+  //       }
 
-        .header h1 {
-          font-size: 36px;
-          font-weight: bold;
-        }
+  //       .header p {
+  //         font-size: 15px;
+  //         color: gray;
+  //         margin-left: 10px;
+  //       }
 
-        .header p {
-          font-size: 15px;
-          color: gray;
-          margin-left: 10px;
-        }
+  //       table {
+  //         width: 100%;
+  //         border-collapse: collapse;
+  //         margin-top: 20px;
+  //       }
 
-        table {
-          width: 100%;
-          border-collapse: collapse;
-          margin-top: 20px;
-        }
+  //       table, th, td {
+  //         border: 1px solid black;
+  //       }
 
-        table, th, td {
-          border: 1px solid black;
-        }
+  //       th, td {
+  //         padding: 10px;
+  //         text-align: left;
+  //       }
 
-        th, td {
-          padding: 10px;
-          text-align: left;
-        }
-
-        .total-row {
-          font-weight: bold;
-        }
-      </style>
-    </head>
-    <body>
-      <div class="container">
-        <div class="header">
-          <h1>Invoice</h1>
-          <p>Last Modified: ${fileData.dateModified}</p>
-        </div>
-        <table>
-          <tr>
-            <th>Invoice Number</th>
-            <th>Invoice Date</th>
-            <th>To</th>
-            <th>From</th>
-          </tr>
-          <tr>
-            <td>${fileData.invoiceNumber}</td>
-            <td>${fileData.invoiceDate}</td>
-            <td>${fileData.toName}<br>${fileData.toAddressLine1}<br>${fileData.toAddressLine2}<br>${fileData.toPhone}</td>
-            <td>${fileData.fromName}<br>${fileData.fromAddressLine1}<br>${fileData.fromAddressLine2}<br>${fileData.fromPhone}</td>
-          </tr>
-        </table>
-        <table>
-          <tr>
-            <th>Description</th>
-            <th>Amount</th>
-          </tr>
-          ${
-            // Loop throw the array
-            fileData.items.map((item) => {
-              return `
-                <tr>
-                  <td>${item.description}</td>
-                  <td>${item.amount}</td>
-                </tr>
-              `;
-            }
-            ).join('')
-          }
-          <tr class="total-row">
-            <td>Total Amount:</td>
-            <td>${fileData.totalAmount}</td>
-          </tr>
-        </table>
-      </div>
-    </body>
-    </html>
-  `;
+  //       .total-row {
+  //         font-weight: bold;
+  //       }
+  //     </style>
+  //   </head>
+  //   <body>
+  //     <div class="container">
+  //       <div class="header">
+  //         <h1>Invoice</h1>
+  //         <p>Last Modified: ${fileData.dateModified}</p>
+  //       </div>
+  //       <table>
+  //         <tr>
+  //           <th>Invoice Number</th>
+  //           <th>Invoice Date</th>
+  //           <th>To</th>
+  //           <th>From</th>
+  //         </tr>
+  //         <tr>
+  //           <td>${fileData.invoiceNumber}</td>
+  //           <td>${fileData.invoiceDate}</td>
+  //           <td>${fileData.toName}<br>${fileData.toAddressLine1}<br>${fileData.toAddressLine2}<br>${fileData.toPhone}</td>
+  //           <td>${fileData.fromName}<br>${fileData.fromAddressLine1}<br>${fileData.fromAddressLine2}<br>${fileData.fromPhone}</td>
+  //         </tr>
+  //       </table>
+  //       <table>
+  //         <tr>
+  //           <th>Description</th>
+  //           <th>Amount</th>
+  //         </tr>
+  //         ${
+  //           // Loop throw the array
+  //           fileData.items.map((item) => {
+  //             return `
+  //               <tr>
+  //                 <td>${item.description}</td>
+  //                 <td>${item.amount}</td>
+  //               </tr>
+  //             `;
+  //           }
+  //           ).join('')
+  //         }
+  //         <tr class="total-row">
+  //           <td>Total Amount:</td>
+  //           <td>${fileData.totalAmount}</td>
+  //         </tr>
+  //       </table>
+  //     </div>
+  //   </body>
+  //   </html>
+  // `;
 
 
   // Calculate total amount
@@ -126,7 +121,7 @@ export default function ViewOnly({ route }) {
     <View style={styles.container}>
       <StatusBar style="auto" />
       <View style={styles.toolbar}>
-        <Button title="Share PDF" onPress={generatePDF} />
+        <Button title="Share PDF" onPress={()=>{sharePDF(fileData)}} />
       </View>
       <View style={styles.formTitle}>
         <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>

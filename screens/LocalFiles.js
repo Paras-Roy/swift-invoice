@@ -1,14 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { useIsFocused } from '@react-navigation/native';
-import { StyleSheet, Text, View, Button, FlatList, TouchableOpacity } from 'react-native';
+import { StyleSheet, Text, View, Modal, Pressable, FlatList, TouchableOpacity } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { getAllFormData, deleteFormData } from '../utils/localStorage';
 import useAuth from '../utils/useAuth';
+import sharePDF from '../utils/Share';
 
 export default function LocalFiles({ navigation }) {
-  const {user} = useAuth();
+  const { user } = useAuth();
   const defaultData1 = {
-    fileID:Math.floor(Math.random() * 10000000),
+    fileID: Math.floor(Math.random() * 100000000), //better way to generate id can be used
 
     authorID: user?.uid,
     fileName: 'Untitled',
@@ -29,6 +30,8 @@ export default function LocalFiles({ navigation }) {
   };
 
   const [formDataObjects, setFormDataObjects] = useState([]);
+  const [selectedFile, setSelectedFile] = useState(null); // Track the file selected for the dropdown
+  const [modalVisible, setModalVisible] = useState(false); // Control the visibility of the dropdown modal
   const isFocused = useIsFocused();
 
   useEffect(() => {
@@ -45,6 +48,38 @@ export default function LocalFiles({ navigation }) {
     setFormDataObjects(formData);
   }
 
+  const openDropdown = (file) => {
+    setSelectedFile(file);
+    setModalVisible(true);
+  };
+
+  const closeDropdown = () => {
+    setSelectedFile(null);
+    setModalVisible(false);
+  };
+
+  const dropdownOptions = [
+    {
+      label: 'Share',
+      action: () => sharePDF(selectedFile.data),
+    },
+    {
+      label: 'View',
+      action: () => navigation.navigate('ViewOnly', { fileData: selectedFile.data, key: selectedFile.key }),
+    },
+    {
+      label: 'Edit',
+      action: () => navigation.navigate('File', { fileData: selectedFile.data, key: selectedFile.key }),
+    },
+    {
+      label: 'Delete',
+      action: () => {
+        closeDropdown();
+        deleteFile(selectedFile.key);
+      },
+    },
+  ];
+
   return (
     <View style={styles.container}>
       <StatusBar style="auto" />
@@ -54,41 +89,57 @@ export default function LocalFiles({ navigation }) {
         data={formDataObjects}
         keyExtractor={(item) => item.key.toString()}
         renderItem={({ item }) => (
-          <View style={styles.fileItem}>
-            <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap:10 }}>
-            <Text style={styles.fileName}>{item.data.fileName} </Text>
-            <Text style={styles.fileDate}>{item.data.dateModified}</Text>
+          <TouchableOpacity onPress={() => openDropdown(item)}>
+            <View style={styles.fileItem}>
+              <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                <Text style={styles.fileName}>{item.data.fileName} </Text>
+                <Text style={styles.fileDate}>{item.data.dateModified}</Text>
+              </View>
             </View>
-            <View style={styles.buttonContainer}>
-              <TouchableOpacity
-                style = {styles.viewButton}
-                onPress={() => navigation.navigate('ViewOnly', { fileData: item.data, key: item.key })}
-              >
-                <Text style={styles.buttonText}>View</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.editButton}
-                onPress={() => navigation.navigate('File', { fileData: item.data, key: item.key })}
-              >
-                <Text style={styles.buttonText}>Edit</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.deleteButton}
-                onPress={() => deleteFile(item.key)}
-              >
-                <Text style={styles.buttonText}>Delete</Text>
-
-              </TouchableOpacity>
-            </View>
-          </View>
+          </TouchableOpacity>
         )}
       />
+
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={closeDropdown}
+      >
+        <Pressable style={styles.modalBackdrop} onPress={closeDropdown}>
+          <View style={styles.modalContainer}>
+            <View style={styles.modalContent}>
+              {dropdownOptions.map((option, index) => (
+                <Pressable
+                  key={index}
+                  onPress={() => {
+                    option.action();
+                    closeDropdown();
+                  }}
+                  style={({ pressed }) => [
+                    {
+                      backgroundColor: pressed ? 'lightgray' : 'white',
+                    },
+                    styles.optionButton,
+                  ]}
+                >
+                  <Text style={styles.optionText}>{option.label}</Text>
+                </Pressable>
+              ))}
+              <Pressable onPress={closeDropdown} style={styles.cancelButton}>
+                <Text style={styles.cancelText}>Cancel</Text>
+              </Pressable>
+            </View>
+          </View>
+        </Pressable>
+      </Modal>
+
       <TouchableOpacity
-      style={styles.button}
-      onPress={() => navigation.navigate('File', { fileData: defaultData1, key: 0 })}
-    >
-      <Text style={styles.buttonText}>Create New File</Text>
-    </TouchableOpacity>
+        style={styles.button}
+        onPress={() => navigation.navigate('File', { fileData: defaultData1, key: 0 })}
+      >
+        <Text style={styles.buttonText}>Create New File</Text>
+      </TouchableOpacity>
     </View>
   );
 }
@@ -103,7 +154,6 @@ const styles = StyleSheet.create({
     fontSize: 36,
     fontWeight: 'bold',
     marginBottom: 16,
-    
   },
   fileItem: {
     flexDirection: 'row',
@@ -121,40 +171,11 @@ const styles = StyleSheet.create({
     fontSize: 25,
     color: '#333',
     fontWeight: 'bold',
-
   },
   fileDate: {
     fontSize: 15,
     color: '#333',
     fontWeight: 'normal',
-  },
-  buttonContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  editButton: {
-    backgroundColor: '#007BFF',
-    borderRadius: 8,
-    paddingHorizontal: 18,
-    paddingVertical: 10,
-    marginRight: 8,
-  },
-  deleteButton: {
-    backgroundColor: '#FF3B30',
-    borderRadius: 8,
-    paddingHorizontal: 18,
-    paddingVertical: 10,
-  },
-  buttonText: {
-    color: 'white',
-    fontWeight: 'bold',
-  },
-  viewButton: {
-    backgroundColor: '#4CD964',
-    borderRadius: 8,
-    paddingHorizontal: 18,
-    paddingVertical: 10,
-    marginRight: 8,
   },
   button: {
     backgroundColor: 'blue',
@@ -167,5 +188,41 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: 'white',
   },
-
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    backgroundColor: 'transparent',
+  },
+  modalContent: {
+    backgroundColor: 'white',
+    borderTopLeftRadius: 10,
+    borderTopRightRadius: 10,
+  },
+  optionButton: {
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: 'lightgray',
+  },
+  optionText: {
+    fontSize: 18,
+    color: '#007BFF',
+    textAlign: 'center',
+  },
+  cancelButton: {
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    borderTopWidth: 1,
+    borderTopColor: 'lightgray',
+  },
+  cancelText: {
+    fontSize: 18,
+    color: 'red',
+    textAlign: 'center',
+  },
+  modalBackdrop: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
 });

@@ -41,23 +41,22 @@ export async function getInvoicesForAuthor(authorID) {
     }
 }
 
-export async function deleteInvoiceByFileID(fileID) {
-    try {
-        // Create a query to find documents with the specified fileID
-        console.log("fileID: ", fileID);
-        const q = query(collection(db, "invoice1"), where("fileID", "==", fileID));
-        const querySnapshot = await getDocs(q);
 
-        if (!querySnapshot.empty) {
-            // If documents with the specified fileID exist, delete them
-            querySnapshot.docs.forEach(async (docSnapshot) => {
-                await deleteDoc(doc(docSnapshot.ref));
-                console.log("Document deleted with ID: ", docSnapshot.id);
-            });
-        } else {
-            console.log("No documents found with fileID: ", fileID);
-        }
-    } catch (e) {
-        console.error("Error deleting documents by fileID: ", e);
+export const deleteInvoiceByFileID = async (fileID) => {
+    try {
+      // Create a query to find the document with the specified fileID
+      const q = query(collection(db, 'invoice1'), where('fileID', '==', fileID));
+      const querySnapshot = await getDocs(q);
+  
+      if (!querySnapshot.empty) {
+        // If a document with the specified fileID exists, delete it
+        const invoiceDoc = querySnapshot.docs[0]; // Assuming there's only one document with the same fileID
+        await deleteDoc(invoiceDoc.ref);
+        console.log('Document successfully deleted');
+      } else {
+        console.log('No document found with fileID:', fileID);
+      }
+    } catch (error) {
+      console.error('Error deleting document:', error);
     }
-}
+  };

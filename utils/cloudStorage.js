@@ -3,13 +3,12 @@ import { db } from "../config/firebase";
 
 export default async function uploadInvoice1(invoice) {
     try {
-        // Create a query to find documents with the specified fileID
         const q = query(collection(db, "invoice1"), where("fileID", "==", invoice.fileID));
         const querySnapshot = await getDocs(q);
 
         if (!querySnapshot.empty) {
             // If a document with the specified fileID exists, update it
-            const invoiceDoc = querySnapshot.docs[0]; // Assuming there's only one document with the same fileID
+            const invoiceDoc = querySnapshot.docs[0];
             await setDoc(invoiceDoc.ref, invoice);
             console.log("Document updated with ID: ", invoice.fileID);
         } else {
@@ -25,7 +24,6 @@ export default async function uploadInvoice1(invoice) {
 
 export async function getInvoicesForAuthor(authorID) {
     try {
-        // Create a query to get all invoices for the specified authorID
         const q = query(collection(db, "invoice1"), where("authorID", "==", authorID));
         
         // Get the documents that match the query
@@ -44,13 +42,12 @@ export async function getInvoicesForAuthor(authorID) {
 
 export const deleteInvoiceByFileID = async (fileID) => {
     try {
-      // Create a query to find the document with the specified fileID
       const q = query(collection(db, 'invoice1'), where('fileID', '==', fileID));
       const querySnapshot = await getDocs(q);
   
       if (!querySnapshot.empty) {
         // If a document with the specified fileID exists, delete it
-        const invoiceDoc = querySnapshot.docs[0]; // Assuming there's only one document with the same fileID
+        const invoiceDoc = querySnapshot.docs[0];
         await deleteDoc(invoiceDoc.ref);
         console.log('Document successfully deleted');
       } else {
